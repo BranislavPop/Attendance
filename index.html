@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Salt-Attendance</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+    <script src="https://jsuites.net/v4/jsuites.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" integrity="sha512-Qlv6VSKh1gDKGoJbnyA5RMXYcvnpIqhO++MhIM2fStMcGT9i2T//tSwYFlcyoRRDcDZ+TYHpH8azBBCyhpSeqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js" integrity="sha512-UnrKxsCMN9hFk7M56t4I4ckB4N/2HHi0w/7+B/1JsXIX3DmyBcsGpT3/BsuZMZf+6mAr0vP81syWtfynHJ69JA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            align-items: center;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form {
+            background-color: #15172b;
+            border-radius: 20px;
+            box-sizing: border-box;
+            height: auto;
+            padding: 20px;
+            width: 420px;
+        }
+
+        .title {
+            color: #eee;
+            font-family: sans-serif;
+            font-size: 36px;
+            font-weight: 600;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #eee;
+            font-family: sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .input-container {
+            height: 50px;
+            position: relative;
+            width: 100%;
+        }
+
+        .ic1 {
+            margin-top: 40px;
+        }
+
+        .ic2 {
+            margin-top: 30px;
+        }
+
+        .input {
+            background-color: #303245;
+            border-radius: 12px;
+            border: 0;
+            box-sizing: border-box;
+            color: #eee;
+            font-size: 18px;
+            height: 100%;
+            outline: 0;
+            padding: 4px 20px 0;
+            width: 100%;
+        }
+
+        .cut {
+            background-color: #15172b;
+            border-radius: 10px;
+            height: 20px;
+            left: 20px;
+            position: absolute;
+            top: -20px;
+            transition: transform 200ms;
+            width: 80%;
+            transform: translateY(10px);
+        }
+
+
+        .input:focus ~ .cut,
+        .input:not(:placeholder-shown) ~ .cut {
+            transform: translateY(10px);
+        }
+
+        .placeholder {
+            color: #65657b;
+            font-family: sans-serif;
+            left: 20px;
+            line-height: 14px;
+            pointer-events: none;
+            position: absolute;
+            transform-origin: 0 50%;
+            transition: transform 300ms, color 200ms;
+            top: 20px;
+            transform: translateY(-30px) translateX(10px) scale(0.75);
+        }
+
+
+        .input:focus ~ .placeholder,
+        .input:not(:placeholder-shown) ~ .placeholder {
+            transform: translateY(-30px) translateX(10px) scale(0.75);
+
+        }
+
+        .input:not(:placeholder-shown) ~ .placeholder {
+            color: #808097;
+        }
+
+        .input:focus ~ .placeholder {
+            color: #dc2f55;
+        }
+
+        .submit {
+            background-color: #08d;
+            border-radius: 12px;
+            border: 0;
+            box-sizing: border-box;
+            color: #eee;
+            cursor: pointer;
+            font-size: 18px;
+            height: 50px;
+            margin-top: 38px;
+        // outline: 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .submit:active {
+            background-color: #06b;
+        }
+
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+
+        .modal-content p {
+            text-align: center;
+            color: red;
+        }
+
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="form">
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modal-content">
+            <span class="close">&times;</span>
+            <p></p>
+        </div>
+    </div>
+    <div class="title">Salt</div>
+    <div class="subtitle">Attendance creator !</div>
+    <div class="input-container ic1">
+        <input required id="firstname" class="input" type="text" placeholder="Name:[ex: MyName] "/>
+        <div class="cut"></div>
+        <label for="firstname" class="placeholder">Name: </label>
+    </div>
+    <div class="input-container ic2">
+        <input required id="lastname" class="input" type="text" placeholder="Surname:[ex: MySurname]"/>
+        <div class="cut"></div>
+        <label for="lastname" class="placeholder">Surname: </label>
+    </div>
+    <div class="input-container ic2">
+        <input required id="calendar" class="input" type="text" placeholder="Date for attendance:[ex: 08-2022]"/>
+        <div class="cut"></div>
+        <label for="calendar" class="placeholder">Date: </label>
+    </div>
+    <div class="input-container ic2">
+        <input id="vacation" class="input" type="text" placeholder="Vacation days:[ex: 1, 2, 3-10, 11]" />
+        <div class="cut"></div>
+        <label for="vacation" class="placeholder">Vacation days:  </label>
+    </div>
+    <div class="input-container ic2">
+        <input id="sick-days" class="input" type="text" placeholder=" Sick days:[ex: 1, 2, 3-10, 11]" />
+        <div class="cut"></div>
+        <label for="sick-days" class="placeholder">Sick days: </label>
+    </div>
+    <div class="input-container ic2">
+        <input id="business-trip" class="input" type="text" placeholder="Business trip days:[ex: 1, 2, 3-10, 11]" />
+        <div class="cut"></div>
+        <label for="business-trip" class="placeholder">Business trip days: </label>
+    </div>
+    <div class="input-container ic2">
+        <select class="input" name="working-hours" id="working-hours">
+            <option value="8:00 - 16:30">8:00 - 16:30</option>
+            <option value="9:00 - 17:30">9:00 - 17:30</option>
+            <option value="10:00 - 18:30">10:00 - 18:30</option>
+        </select>
+        <div class="cut"></div>
+        <label for="working-hours" class="placeholder">Choose the working hours: </label>
+    </div>
+    <input type="submit" id="submit" class="submit" value="Create attendance">
+    <script>
+        document.getElementById("submit").onclick = () => {
+            // HTML ELEMENTS:
+            const firstName = document.getElementById("firstname")
+            const lastName = document.getElementById("lastname")
+            const date = document.getElementById("calendar")
+            const vacation = document.getElementById("vacation")
+            const sick_days = document.getElementById("sick-days")
+            const business = document.getElementById("business-trip")
+            const working_hours = document.getElementById("working-hours")
+
+            let sick_day_list = parseString(sick_days.value)
+            let vacation_list = parseString(vacation.value)
+            let business_list = parseString(business.value)
+            let dl = (date.value).trim()
+            let date_list = dl.split('-')
+            let year = parseInt(date_list[1])
+            let month = parseInt(date_list[0])
+            let working_hours_list = (working_hours.value).split('-')
+            let wh_from = working_hours_list[0]
+            let wh_to = working_hours_list[1]
+            let valid_input= true
+
+            const modal = document.getElementById("modal")
+            const modal_content = document.getElementById("modal-content")
+
+            if(collision_checker(sick_day_list,business_list)){
+                modal.style.display = "block"
+                const p = document.createElement("p")
+                p.innerHTML = "Collision in Sick days and Business days, please resolve it!"
+                modal_content.append(p)
+                valid_input = false
+                business.style.border= "red 4px solid"
+                sick_days.style.border= "red 4px solid"
+            }
+            else{
+                sick_days.style.border = "none"
+                business.style.border = "none"
+            }
+            if(collision_checker(vacation_list,business_list)){
+                modal.style.display = "block"
+                const p = document.createElement("p")
+                p.innerHTML = "Collision in Vacation days and Business days, please resolve it!"
+                modal_content.append(p)
+                valid_input = false
+                vacation.style.border= "red 4px solid"
+                business.style.border= "red 4px solid"
+            }
+            else{
+                vacation.style.border = "none"
+                if(valid_input)
+                    business.style.border = "none"
+            }
+            if(firstName.value === ""){
+                modal.style.display = "block"
+                const p = document.createElement("p")
+                p.innerHTML = "Please insert a first name !"
+                modal_content.append(p)
+                valid_input = false
+                firstName.style.border= "red 4px solid"
+            }
+            else{
+                firstName.style.border = "none"
+            }
+            if(lastName.value === ""){
+                modal.style.display = "block"
+                const p = document.createElement("p")
+                p.innerHTML = "Please insert a last name !"
+                modal_content.append(p)
+                valid_input = false
+                lastName.style.border= "red 4px solid"
+            }
+            else{
+
+                lastName.style.border = "none"
+            }
+
+            if(date.value === ""){
+                modal.style.display = "block"
+                const p = document.createElement("p")
+                p.innerHTML = "Please choose date !"
+                modal_content.append(p)
+                valid_input = false
+                date.style.border= "red 4px solid"
+            }
+            else{
+                date.style.border = "none"
+            }
+
+
+
+            document.getElementsByClassName("close")[0].onclick = function() {
+                modal.style.display = "none";
+                modal_content.innerHTML="<span class=\"close\">&times;</span>"
+            }
+
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                    modal_content.innerHTML="<span class=\"close\">&times;</span>"
+                }
+            }
+
+            if(valid_input) {
+
+                // STYLE FOR EXCEL:
+                const m_border = {
+                    top: {style: 'medium', color: {argb: '01000000'}},
+                    left: {style: 'medium', color: {argb: '01000000'}},
+                    bottom: {style: 'medium', color: {argb: '01000000'}},
+                    right: {style: 'medium', color: {argb: '01000000'}}
+                }
+                const t_border = {
+                    top: {style: 'thin', color: {argb: '01000000'}},
+                    left: {style: 'thin', color: {argb: '01000000'}},
+                    bottom: {style: 'thin', color: {argb: '01000000'}},
+                    right: {style: 'thin', color: {argb: '01000000'}}
+                }
+
+                const bold_font = {name: "Arial", size: "10", bold: "true"}
+                const normal_font = {name: "Arial", size: "10"}
+
+                const time_format = 'hh:mm'
+                const pure_format = '[h]:mm'
+
+                const fill_green = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    bgColor: {argb: 'FF009900'},
+                    fgColor: {argb: 'FF009900'}
+                }
+
+                const alignment  = {vertical: "bottom",horizontal: 'right'}
+
+                if (firstName.value !== "" && lastName.value !== "" && date.value !== "") {
+                    const basic = "SaltAttendance"
+                    const fileName = "Dochadzkovy_formular_" + date.value + "_" + firstName.value + " " + lastName.value
+                    // CREATE NEW EXCEL "FILE"
+                    const workbook = new ExcelJS.Workbook({useStyles: true});
+                    workbook.protection = true
+                    const worksheet = workbook.addWorksheet('Hárok1');
+                    worksheet.protect(basic, {
+                        formatCells: true,
+                        formatColumns: true,
+                        formatRows: true,
+                        insertRows: true,
+                        insertColumns: false,
+                        insertHyperlinks: true,
+                        deleteRows: true,
+                        deleteColumns: false,
+                        sort: true,
+                        autoFilter: true
+                    })
+                    worksheet.font = normal_font
+                    worksheet.alignment = alignment;
+
+                    worksheet.mergeCells(`A1:C2`);
+
+                    worksheet.getColumn(4).width = 25
+
+                    worksheet.getColumn(1).width = 15
+                    worksheet.getColumn(1).alignment = alignment
+                    worksheet.getColumn(2).width = 15
+                    worksheet.getColumn(2).alignment = alignment
+                    worksheet.getColumn(3).width = 15
+                    worksheet.getColumn(3).alignment = alignment
+                    worksheet.getColumn(4).width = 25
+                    worksheet.getColumn(4).alignment = alignment
+                    worksheet.getColumn(5).width = 25
+                    worksheet.getColumn(5).alignment = alignment
+                    worksheet.getColumn(6).width = 10
+                    worksheet.getColumn(6).alignment = alignment
+                    worksheet.getColumn(7).alignment = alignment
+                    worksheet.getColumn(8).alignment = alignment
+                    worksheet.getColumn(9).width = 18
+                    worksheet.getColumn(9).alignment = alignment
+                    worksheet.getColumn(10).width = 15
+                    worksheet.getColumn(10).alignment = alignment
+
+                    worksheet.getCell('E1').value = 'Mesiac';
+                    worksheet.getCell("E1").border = m_border
+                    worksheet.getCell("E1").font = bold_font
+                    worksheet.getCell("E1").alignment = {vertical: "bottom", horizontal: "center"}
+
+                    worksheet.getCell("A1").value = 'Dochádzka zamestnanca'
+                    worksheet.getCell("A1").font = bold_font
+                    worksheet.getCell("A1").border = m_border
+                    worksheet.getCell("A1").alignment = {vertical: "bottom", horizontal: "left"}
+
+                    worksheet.getCell("D2").value = firstName.value + " " + lastName.value
+                    worksheet.getCell("D2").border = m_border
+                    worksheet.getCell("D2").font = bold_font
+                    worksheet.getCell("D2").alignment = {vertical: "bottom", horizontal: "left"}
+
+                    worksheet.getCell("E2").value = date.value
+                    worksheet.getCell("E2").border = m_border
+                    worksheet.getCell("E2").font = bold_font
+                    worksheet.getCell("E2").alignment = {vertical: "bottom", horizontal: "center"}
+
+                    worksheet.getRow(5).values = ['Deň', 'Od', 'Do', 'Typ', 'Odpracované hodiny', 'Obed', 'Poznámka']
+                    worksheet.getCell("A5").border = m_border
+                    worksheet.getCell("A5").width = 20
+
+                    worksheet.getCell("B5").border = m_border
+                    worksheet.getCell("B5").width = 20
+
+                    worksheet.getCell("C5").border = m_border
+                    worksheet.getCell("C5").width = 20
+
+                    worksheet.getCell("D5").border = m_border
+
+                    worksheet.getCell("E5").border = m_border
+                    worksheet.getCell("E5").width = 20
+
+                    worksheet.getCell("F5").border = m_border
+
+                    worksheet.getCell("G5").border = m_border
+
+                    worksheet.getCell("I24").value = "SPOLU:"
+                    worksheet.getCell("I24").font = bold_font
+                    worksheet.getCell("J24").numFmt = pure_format
+                    worksheet.getCell("J24").font = bold_font
+                    worksheet.getCell("I25").value = "NADČASY:"
+                    worksheet.getCell("I25").font = bold_font
+
+                    worksheet.getRow(5).font = bold_font
+
+
+                    let number_of_days = 0
+                    let month_days = parseInt(get_days_in_month(month, year))
+                    for (let i = 0; i < month_days; i++) {
+                        try {
+                            let date_f = year + "-" + month + "-" + (i + 1)
+                            let correct_format = (i + 1) + "/" + month + "/" + year
+                            let date = new Date(date_f)
+                            let wd = date.getDay()
+                            let day = parseInt(i) + parseInt(1)
+                            let fd = is_free_day(day, month, year)
+                            let formula_l = "=C" + (6 + i) + "-B" + (6 + i) + "-F" + (6 + i)
+                            if (wd !== 0 && wd !== 6 && !vacation_list.includes(day) && !sick_day_list.includes(day) && !business_list.includes(day) && !fd) {
+                                number_of_days++
+                                worksheet.getCell("A" + (6 + i)).value = correct_format
+
+                                worksheet.getCell("B" + (6 + i)).value = (wh_from).trim()
+
+                                worksheet.getCell("C" + (6 + i)).value = (wh_to).trim()
+
+                                worksheet.getCell("D" + (6 + i)).value = ""
+
+                                worksheet.getCell("E" + (6 + i)).value = {formula: formula_l}
+
+                                worksheet.getCell("F" + (6 + i)).value = "00:30"
+
+
+                            } else {
+                                worksheet.getCell("A" + (6 + i)).value = correct_format
+                                worksheet.getCell("A" + (6 + i)).fill = fill_green
+
+                                worksheet.getCell("B" + (6 + i)).value = ""
+                                worksheet.getCell("B" + (6 + i)).fill = fill_green
+
+                                worksheet.getCell("C" + (6 + i)).value = ""
+                                worksheet.getCell("C" + (6 + i)).fill = fill_green
+
+                                if (wd === 0 || wd === 6)
+                                    worksheet.getCell("D" + (6 + i)).value = "víkend"
+                                else if (fd)
+                                    worksheet.getCell("D" + (6 + i)).value = "sviatok"
+                                else if (vacation_list.includes((day)))
+                                    worksheet.getCell("D" + (6 + i)).value = "dovolenka"
+                                else if (business_list.includes((day)))
+                                    worksheet.getCell("D" + (6 + i)).value = "pracovná cesta"
+                                else if (sick_day_list.includes((day)))
+                                    worksheet.getCell("D" + (6 + i)).value = "doktor/očr/PN"
+                                worksheet.getCell("D" + (6 + i)).fill = fill_green
+
+                                worksheet.getCell("E" + (6 + i)).value = ""
+                                worksheet.getCell("E" + (6 + i)).fill = fill_green
+
+                                worksheet.getCell("F" + (6 + i)).value = ""
+                                worksheet.getCell("F" + (6 + i)).fill = fill_green
+                            }
+
+                            worksheet.getCell("A" + (6 + i)).font = normal_font
+                            worksheet.getCell("A" + (6 + i)).border = t_border
+                            worksheet.getCell("B" + (6 + i)).font = normal_font
+                            worksheet.getCell("B" + (6 + i)).border = t_border
+                            worksheet.getCell("B" + (6 + i)).numFmt = time_format
+                            worksheet.getCell("C" + (6 + i)).numFmt = time_format
+                            worksheet.getCell("C" + (6 + i)).font = normal_font
+                            worksheet.getCell("C" + (6 + i)).border = t_border
+                            worksheet.getCell("D" + (6 + i)).font = normal_font
+                            worksheet.getCell("D" + (6 + i)).border = t_border
+                            worksheet.getCell("E" + (6 + i)).numFmt = time_format
+                            worksheet.getCell("E" + (6 + i)).border = t_border
+                            worksheet.getCell("E" + (6 + i)).font = normal_font
+                            worksheet.getCell("F" + (6 + i)).numFmt = time_format
+                            worksheet.getCell("F" + (6 + i)).font = normal_font
+                            worksheet.getCell("F" + (6 + i)).border = t_border
+
+                            worksheet.getCell("F40").value = (number_of_days * 8) / 24
+                            worksheet.getCell("F40").numFmt = pure_format
+                            worksheet.getCell("F40").font = normal_font
+
+
+                            worksheet.getCell("J24").value = {formula: '=SUM(E6:E' + (5 + parseInt(month_days)) + ')'}
+                            worksheet.getCell("J25").value = {formula: "=IF(SUM(J24-F40)>0,SUM(J24-F40),0)"}
+
+                            worksheet.getCell("J25").numFmt = pure_format
+                            worksheet.getCell("J25").font = bold_font
+                        } catch (e) {
+                            console.log(e)
+                        }
+                    }
+                    worksheet.getColumn(2).protection = {locked: false, lockText: false};
+                    worksheet.getColumn(3).protection = {locked: false, lockText: false};
+                    worksheet.getColumn(6).protection = {locked: false, lockText: false};
+                    worksheet.getColumn(7).protection = {locked: false, lockText: false};
+                    workbook.xlsx.writeBuffer().then(function (buffer) {
+                        const blob = new Blob([buffer], {type: "applicationi/xlsx"});
+                        saveAs(blob, fileName + ".xlsx");
+                    });
+                }
+            }
+        }
+
+        function parseString(string){
+            let main_list = []
+            string = string.trim()
+            let list = string.split(",")
+            for(let i=0;i < list.length; i++){
+                try {
+                    if (list[i].includes("-")) {
+                        let tmp = list[i].split('-')
+                        for (let j = parseInt(tmp[0]); j <= parseInt(tmp[1]); j++) {
+                            main_list.push(parseInt(j))
+                        }
+                    }
+                    else{
+                        main_list.push(parseInt(list[i]))
+                    }
+                }
+                catch (e){
+                    console.log(e)
+                }
+            }
+            return main_list
+        }
+
+        // CALENDAR UTILITIES:
+        function is_leap_year(year){
+            if(year%4 === 0 ){
+                return !(year % 100 === 0 && year % 400 !== 0);
+            }
+            return false
+        }
+
+        function get_days_in_month(month, year){
+
+            let months_days=[
+                {month: {id: 1, day:  31}},
+                {month: {id: 2, day: is_leap_year(year)?29:28}},
+                {month: {id: 3, day:  31}},
+                {month: {id: 4, day:  30}},
+                {month: {id: 5, day : 31}},
+                {month: {id: 6, day: 30}},
+                {month: {id: 7, day: 31}},
+                {month: {id: 8, day: 31}},
+                {month: {id: 9, day: 30}},
+                {month: {id: 10, day: 31}},
+                {month: {id: 11, day: 30}},
+                {month: {id: 12, day: 31}}]
+            let day;
+            months_days.forEach(item=>{
+                if(item.month.id === month){
+                    day = item.month.day
+                }
+            })
+            return day
+
+        }
+
+        function get_day_num(day, month, year){
+            let days = 0
+            for(let i=1;i<month;i++){
+                days+=get_days_in_month(i,year)
+            }
+            days+=day
+            return days
+        }
+
+
+
+        function get_easter_sunday(year){
+            let day
+            let month
+            let a = year % 19
+            let b = year % 4
+            let c = year % 7
+            let m = 24
+            let n = 5
+            let d = (19 * a + m) % 30
+            let e = (n + 2*b + 4*c + 6*d) % 7
+            let easter_sunday_1 = 22 + d + e
+            let easter_sunday_2 = d + e - 9
+            if(easter_sunday_1 <= 31){
+                day = easter_sunday_1
+                month = 3
+            }
+            else {
+                if(easter_sunday_2===25 && e === 6 && a > 10){
+                    easter_sunday_2 = 18
+                }
+                else if(easter_sunday_2 > 25) {
+                    easter_sunday_2 = easter_sunday_2 - 7
+                }
+                day = easter_sunday_2
+                month = 4
+            }
+            return [day, month]
+        }
+
+        let public_holidays = [
+            {day: 1, month: 1, description: "Deň vzniku Slovenskej republiky"},
+            {day:5, month: 7, description:"Sviatok sv. Cyrila a Metoda"},
+            {day:29,month:8,description:"Výročie Slovenského národného povstania"},
+            {day:1,month:9,description:"Deň ústavy SR"},
+            {day:17,month:11,description:"Deň boja za slobodu a demokraciu"}
+        ]
+
+
+
+        let days_of_labor_peace =[
+            {day:6,month:1,description:"Zjavenie Pána"},
+            {day:1,month:5,description:"Sviatok práce"},
+            {day:8,month:5,description:"Deň víťazstva nad fašizmom"},
+            {day:15,month:9,description:"Sedembolestná Panna Mária"},
+            {day:1,month:11,description:"Sviatok všetkých svätých"},
+            {day:24,month:12,description:"Štedrý deň"},
+            {day:25,month:12,description:"Prvý sviatok vianočný"},
+            {day:26,month:12,description:"Druhý sviatok vianočný"}
+        ]
+
+
+        function is_holiday(day, month){
+            for(let i=0;i<public_holidays.length;i++){
+                if(public_holidays[i].day === parseInt(day) && public_holidays[i].month === parseInt(month)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        function is_labor_peace(day, month, year){
+            for(let i=0;i<days_of_labor_peace.length;i++){
+                if(days_of_labor_peace[i].day === parseInt(day) && days_of_labor_peace[i].month === parseInt(month)) {
+                    return true
+                }
+            }
+            let d
+            let m
+            [d,m] = get_easter_sunday(year)
+            let easter_sunday = get_day_num(d,m,year)
+            let our_day = get_day_num(day, month, year)
+            if(our_day === (easter_sunday-2))
+                return true // Easter friday
+            if(our_day === easter_sunday)
+                return true // Easter sunday
+            if(our_day === (easter_sunday+1))
+                return true // Easter monday
+            return false
+        }
+
+        function is_free_day(day, month, year){
+            let is_free = is_holiday(day,month,year)
+            if (is_free)
+                return is_free
+            return is_labor_peace(day,month,year)
+        }
+
+        function collision_checker(vac_list,business_list){
+            if(isNaN(vac_list[0]) || isNaN(business_list[0]))
+                return false
+            for(let i=0;i<vac_list.length;i++) {
+                if (parseInt(vac_list[i]) === 0) {
+                    continue
+                }
+                if (business_list.includes(vac_list[i]))
+                    return true
+            }
+            for(let i=0;i<business_list.length;i++){
+                if(parseInt(business_list[i]) === 0){
+                    continue
+                }
+                if(vac_list.includes(business_list[i]))
+                    return true
+
+            }
+            return false
+        }
+    </script>
+    <script>
+        jSuites.calendar(document.getElementById('calendar'), {
+            type: 'year-month-picker',
+            format: 'MM-YYYY',
+            validRange: [ '2020-01-01', '2023-12-31' ]
+        });
+    </script>
+</div>
+</body>
+</html>
